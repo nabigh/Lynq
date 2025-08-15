@@ -17,6 +17,51 @@
         android:layout_gravity="end"
         android:visibility="gone" />
 
+    <ImageView
+        android:id="@+id/userMedia"
+        android:layout_width="200dp"
+        android:layout_height="150dp"
+        android:layout_gravity="end"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/userDocument"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#E1FFC7"
+        android:padding="10dp"
+        android:layout_gravity="end"
+        android:visibility="gone" />
+
+    <!-- User audio message layout -->
+    <LinearLayout
+        android:id="@+id/userAudioLayout"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:background="#DCF8C6"
+        android:padding="10dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/userAudioPlayButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_media_play"
+            android:contentDescription="Play audio"/>
+
+        <TextView
+            android:id="@+id/userAudioDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="00:00"
+            android:textColor="#000"
+            android:gravity="center_vertical"/>
+    </LinearLayout>
+
     <!-- Bot message (left-aligned) -->
     <TextView
         android:id="@+id/botMessage"
@@ -27,5 +72,50 @@
         android:padding="10dp"
         android:layout_gravity="start"
         android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/botMedia"
+        android:layout_width="200dp"
+        android:layout_height="150dp"
+        android:layout_gravity="start"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/botDocument"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#E1E1E1"
+        android:padding="10dp"
+        android:layout_gravity="start"
+        android:visibility="gone" />
+
+    <!-- Bot audio message layout -->
+    <LinearLayout
+        android:id="@+id/botAudioLayout"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:background="#EAEAEA"
+        android:padding="10dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/botAudioPlayButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_media_play"
+            android:contentDescription="Play audio"/>
+
+        <TextView
+            android:id="@+id/botAudioDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="00:00"
+            android:textColor="#000"
+            android:gravity="center_vertical"/>
+    </LinearLayout>
 
 </LinearLayout>

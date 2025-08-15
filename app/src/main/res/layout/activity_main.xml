@@ -20,15 +20,32 @@
 
         <EditText
             android:id="@+id/messageEditText"
-            android:layout_weight="1"
-            android:layout_width="0dp"
+            android:layout_width="26dp"
             android:layout_height="wrap_content"
-            android:hint="Type a message"/>
+            android:layout_weight="1"
+            android:hint="Type a message" />
+
+        <Button
+            android:id="@+id/attachButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Attach" />
+
+        <Button
+            android:id="@+id/camButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Camera"/>
 
         <Button
             android:id="@+id/sendButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Send"/>
+        <Button
+            android:id="@+id/recButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Record"/>
     </LinearLayout>
 </LinearLayout>
