@@ -1,258 +1,258 @@
 package com.example.simplechatapp
 
 import android.Manifest
-import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.ContentValues
-import android.content.Intent
-import android.graphics.Bitmap
-import android.media.MediaPlayer
-import android.media.MediaRecorder
-import android.net.Uri
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
-import android.speech.RecognizerIntent
-import android.speech.tts.TextToSpeech
-import android.widget.*
-import androidx.activity.result.ActivityResultLauncher
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.setText
+import androidx.compose.ui.semantics.text
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.simplechatapp.databinding.ActivityNoteEditorBinding // Make sure your layout file is named activity_note_editor.xml
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.util.*
+import java.util.* // For UUID if you were to use it directly here, though it's in CanvasObject now
 
-class NoteEditorActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
+class NoteEditorActivity : AppCompatActivity() {
 
-    private lateinit var editTitle: EditText
-    private lateinit var editContent: EditText
-    private lateinit var btnSave: Button
-    private lateinit var btnDraw: Button
-    private lateinit var btnImage: Button
-    private lateinit var btnCamera: Button
-    private lateinit var btnRecordAudio: Button
-    private lateinit var btnPlayAudio: Button
-    private lateinit var btnSpeechToText: Button
-    private lateinit var btnTextToSpeech: Button
-    private lateinit var drawingCanvas: DrawingView
-
+    private lateinit var binding: ActivityNoteEditorBinding
     private lateinit var db: AppDatabase
-    private var noteId: Long? = null
-    private lateinit var contactId: String
+    private var currentNoteId: Long? = null
+    private lateinit var currentContactId: String // Ensure this is always passed and valid
 
-    private var imagePath: String? = null
-    private var audioPath: String? = null
-    private var recorder: MediaRecorder? = null
-    private var player: MediaPlayer? = null
-    private var tts: TextToSpeech? = null
+    // Example launcher for requesting permissions if needed later
+    private val requestMultiplePermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            var allGranted = true
+            permissions.entries.forEach {
+                if (!it.value) {
+                    allGranted = false
+                    // Handle individual permission denial if necessary
+                    // Toast.makeText(this, "${it.key} permission denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+            if (allGranted) {
+                // Permissions granted, proceed with action that required them
+                // Example: Toast.makeText(this, "All required permissions granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Some permissions were denied. Certain features might not work.", Toast.LENGTH_LONG).show()
+            }
+        }
 
-    private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
-    private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_note_editor)
+        binding = ActivityNoteEditorBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(
-                Manifest.permission.RECORD_AUDIO,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.CAMERA
-            ),
-            1
-        )
-
-        contactId = intent.getStringExtra("contactId") ?: return
-        noteId = intent.getLongExtra("noteId", -1L).takeIf { it != -1L }
-
-        editTitle = findViewById(R.id.editNoteTitle)
-        editContent = findViewById(R.id.editNoteContent)
-        btnSave = findViewById(R.id.btnSaveNote)
-        btnDraw = findViewById(R.id.btnDraw)
-        btnImage = findViewById(R.id.btnImage)
-        btnCamera = findViewById(R.id.btnCamera)
-        btnRecordAudio = findViewById(R.id.btnRecordAudio)
-        btnPlayAudio = findViewById(R.id.btnPlayAudio)
-        btnSpeechToText = findViewById(R.id.btnSpeechToText)
-        btnTextToSpeech = findViewById(R.id.btnTextToSpeech)
-        drawingCanvas = findViewById(R.id.drawingCanvas)
-
-        db = AppDatabase.getDatabase(this)
-        tts = TextToSpeech(this, this)
-
-        if (noteId != null) loadNote()
-
-        // Gallery picker
-        galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val uri = result.data?.data
-                imagePath = uri.toString()
-                Toast.makeText(this, "Image added", Toast.LENGTH_SHORT).show()
-            }
+        // --- Essential: Get contactId and noteId ---
+        currentContactId = intent.getStringExtra("contactId") ?: run {
+            Toast.makeText(this, "Error: Contact ID missing. Cannot open note editor.", Toast.LENGTH_LONG).show()
+            finish() // Critical to finish if contactId is missing
+            return
         }
 
-        // Camera capture
-        cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val bitmap = result.data?.extras?.get("data") as? Bitmap
-                bitmap?.let {
-                    imagePath = saveBitmapToFile(it)
-                    Toast.makeText(this, "Photo captured", Toast.LENGTH_SHORT).show()
+        intent.getLongExtra("noteId", -1L).takeIf { it != -1L }?.let {
+            currentNoteId = it
+        }
+
+        db = AppDatabase.getDatabase(this)
+
+        if (currentNoteId != null) {
+            loadNoteData()
+        } else {
+            // For new notes, ensure canvas is clear (though it should be by default)
+            binding.interactiveCanvas.clearCanvas()
+        }
+
+        setupToolbar()
+        setupToolButtons()
+
+        binding.btnSaveNote.setOnClickListener {
+            saveNoteData()
+        }
+
+        // Example: Check and request necessary permissions (uncomment and modify as needed)
+        // checkAndRequestPermissions()
+    }
+
+    private fun setupToolbar() {
+        // You can set up a SupportActionBar here if your theme supports it
+        // supportActionBar?.title = if (currentNoteId == null) "New Note" else "Edit Note"
+        // supportActionBar?.setDisplayHomeAsUpEnabled(true) // For back navigation
+    }
+
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        // Handle Toolbar back button
+//        if (item.itemId == android.R.id.home) {
+//            // Consider prompting to save if there are unsaved changes
+//            finish()
+//            return true
+//        }
+//        return super.onOptionsItemSelected(item)
+//    }
+
+    private fun checkAndRequestPermissions() {
+        val requiredPermissions = mutableListOf<String>()
+        // Add permissions your canvas might need (e.g., for adding images from gallery/camera)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            // requiredPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE) // Use READ_MEDIA_IMAGES for API 33+
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            // requiredPermissions.add(Manifest.permission.CAMERA)
+        }
+        // Add other permissions like RECORD_AUDIO if you add those features to the canvas
+
+        if (requiredPermissions.isNotEmpty()) {
+            requestMultiplePermissionsLauncher.launch(requiredPermissions.toTypedArray())
+        }
+    }
+
+
+    private fun setupToolButtons() {
+        binding.btnSetColorRed.setOnClickListener {
+            binding.interactiveCanvas.setPenColor(Color.RED)
+            // Consider visual feedback for selected tool/color
+        }
+        binding.btnSetColorBlack.setOnClickListener {
+            binding.interactiveCanvas.setPenColor(Color.BLACK)
+        }
+        // Add more colors
+        binding.btnSetColorBlue.setOnClickListener { // Assuming you add this button to XML
+            binding.interactiveCanvas.setPenColor(Color.BLUE)
+        }
+
+        binding.btnSetStrokeSmall.setOnClickListener {
+            binding.interactiveCanvas.setPenStrokeWidth(8f) // Adjusted for better visibility
+        }
+        binding.btnSetStrokeMedium.setOnClickListener { // Assuming you add this button to XML
+            binding.interactiveCanvas.setPenStrokeWidth(16f)
+        }
+        binding.btnSetStrokeLarge.setOnClickListener {
+            binding.interactiveCanvas.setPenStrokeWidth(32f)
+        }
+        binding.btnClearCanvas.setOnClickListener {
+            binding.interactiveCanvas.clearCanvas()
+        }
+
+        // --- TODO: Future Tool Implementations ---
+        // binding.btnEraser.setOnClickListener {
+        //      binding.interactiveCanvas.setMode(InteractiveCanvasView.Mode.ERASE)
+        //      binding.interactiveCanvas.setEraserSize(20f) // Example
+        // }
+        // binding.btnAddText.setOnClickListener {
+        //      binding.interactiveCanvas.setMode(InteractiveCanvasView.Mode.TEXT_ADD)
+        //      // Could open a dialog to input text, then pass to canvas
+        // }
+        // binding.btnAddImage.setOnClickListener {
+        //      binding.interactiveCanvas.setMode(InteractiveCanvasView.Mode.IMAGE_ADD)
+        //      // Launch gallery/camera, then pass Uri to canvas
+        // }
+    }
+
+    private fun loadNoteData() {
+        currentNoteId?.let { noteId ->
+            lifecycleScope.launch {
+                val note = db.lynqNoteDao().getNoteById(noteId)
+                if (note != null) {
+                    binding.editNoteTitle.setText(note.title)
+                    binding.interactiveCanvas.loadContentFromJson(note.canvasContentJson)
+                    // TODO: Load other relevant fields from the note if necessary
+                    // e.g., if you store canvas zoom/pan state, background color, etc.
+                } else {
+                    Toast.makeText(this@NoteEditorActivity, "Failed to load note.", Toast.LENGTH_SHORT).show()
+                    // Optionally finish if note can't be found
+                    // finish()
                 }
             }
         }
-
-        btnImage.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            galleryLauncher.launch(intent)
-        }
-
-        btnCamera.setOnClickListener {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            cameraLauncher.launch(intent)
-        }
-
-        btnDraw.setOnClickListener {
-            val bitmap = drawingCanvas.getBitmap()
-            imagePath = saveBitmapToFile(bitmap)
-            Toast.makeText(this, "Drawing saved", Toast.LENGTH_SHORT).show()
-        }
-
-        btnRecordAudio.setOnClickListener {
-            if (recorder == null) startRecording() else stopRecording()
-        }
-
-        btnPlayAudio.setOnClickListener {
-            playAudio()
-        }
-
-        btnSpeechToText.setOnClickListener {
-            startSpeechToText()
-        }
-
-        btnTextToSpeech.setOnClickListener {
-            val text = editContent.text.toString()
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
-        }
-
-        btnSave.setOnClickListener {
-            saveNote()
-        }
     }
 
-    private fun loadNote() {
+    private fun saveNoteData() {
+        val title = binding.editNoteTitle.text.toString().trim()
+        if (title.isEmpty()) {
+            Toast.makeText(this, "Title cannot be empty", Toast.LENGTH_SHORT).show()
+            binding.editNoteTitle.error = "Title required" // More direct feedback
+            return
+        }
+
+        val canvasJson = binding.interactiveCanvas.getContentAsJson()
+        // If canvasJson is null (empty canvas), you might want to store it as such or as an empty string ""
+        // depending on how your loadContentFromJson handles null vs empty.
+
         lifecycleScope.launch {
-            val note = db.lynqNoteDao().getNotesForContact(contactId).find { it.id == noteId }
-            note?.let {
-                editTitle.setText(it.title)
-                editContent.setText(it.content)
-                imagePath = it.imagePath
-                audioPath = it.audioPath
+            val timestamp = System.currentTimeMillis()
+            var noteToSave: LynqNote? = null
+
+            if (currentNoteId != null) {
+                // Existing note
+                noteToSave = db.lynqNoteDao().getNoteById(currentNoteId!!)?.apply {
+                    this.title = title
+                    this.canvasContentJson = canvasJson
+                    this.updatedAt = timestamp
+                    this.preview = generatePreview(canvasJson, title) // Pass content for preview
+                }
+                if (noteToSave == null) {
+                    Toast.makeText(this@NoteEditorActivity, "Error: Could not find existing note to update.", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+            } else {
+                // New note
+                noteToSave = LynqNote(
+                    contactId = currentContactId,
+                    title = title,
+                    canvasContentJson = canvasJson,
+                    createdAt = timestamp,
+                    updatedAt = timestamp,
+                    preview = generatePreview(canvasJson, title) // Pass content for preview
+                )
             }
-        }
-    }
 
-    private fun saveNote() {
-        lifecycleScope.launch {
-            val note = LynqNote(
-                id = noteId ?: 0,
-                contactId = contactId,
-                title = editTitle.text.toString(),
-                content = editContent.text.toString(),
-                preview = editContent.text.toString().take(50),
-                imagePath = imagePath,
-                audioPath = audioPath
-            )
-            if (noteId == null) db.lynqNoteDao().insert(note) else db.lynqNoteDao().update(note)
-            finish()
-        }
-    }
-
-    private fun startRecording() {
-        audioPath = "${externalCacheDir?.absolutePath}/note_audio_${System.currentTimeMillis()}.3gp"
-        recorder = MediaRecorder().apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setOutputFile(audioPath)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-            try {
-                prepare()
-                start()
-                Toast.makeText(this@NoteEditorActivity, "Recording started", Toast.LENGTH_SHORT).show()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun stopRecording() {
-        recorder?.apply {
-            stop()
-            release()
-        }
-        recorder = null
-        Toast.makeText(this, "Recording saved", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun playAudio() {
-        if (audioPath != null) {
-            player = MediaPlayer().apply {
+            // Perform the database operation
+            noteToSave?.let {
                 try {
-                    setDataSource(audioPath)
-                    prepare()
-                    start()
-                    Toast.makeText(this@NoteEditorActivity, "Playing audio", Toast.LENGTH_SHORT).show()
-                } catch (e: IOException) {
+                    if (it.id == 0L) { // id is 0 for a new, unsaved entity
+                        val newId = db.lynqNoteDao().insert(it) // Assuming insert returns the new ID
+                        if (newId > 0) {
+                            currentNoteId = newId // Update currentNoteId if it was a new note
+                            Toast.makeText(this@NoteEditorActivity, "Note Saved", Toast.LENGTH_SHORT).show()
+                            finish()
+                        } else {
+                            Toast.makeText(this@NoteEditorActivity, "Failed to save new note.", Toast.LENGTH_SHORT).show()
+                        }
+                    } else { // Existing note
+                        db.lynqNoteDao().update(it)
+                        Toast.makeText(this@NoteEditorActivity, "Note Updated", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(this@NoteEditorActivity, "Error saving note: ${e.message}", Toast.LENGTH_LONG).show()
                     e.printStackTrace()
                 }
             }
         }
     }
 
-    private fun startSpeechToText() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+    /**
+     * Generates a preview for the note.
+     * This is a placeholder. You'll need a more sophisticated implementation.
+     * For example, get first few lines of text from canvas objects, or a thumbnail.
+     */
+    private fun generatePreview(canvasJson: String?, title: String): String {
+        // Simplistic preview:
+        if (canvasJson != null && canvasJson.length > 50) { // Arbitrary check if there's significant canvas content
+            return "$title (Drawing)"
         }
-        try {
-            startActivityForResult(intent, 200)
-        } catch (a: ActivityNotFoundException) {
-            Toast.makeText(this, "Speech recognition not supported", Toast.LENGTH_SHORT).show()
-        }
+        return title.take(100) // Default to title if no complex canvas content detected by this simple check
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 200 && resultCode == RESULT_OK && data != null) {
-            val result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            editContent.append(" " + result?.get(0))
-        }
-    }
-
-    private fun saveBitmapToFile(bitmap: Bitmap): String {
-        val file = File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "drawing_${System.currentTimeMillis()}.png")
-        FileOutputStream(file).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-        }
-        return file.absolutePath
-    }
-
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            tts?.language = Locale.getDefault()
-        }
-    }
 
     override fun onDestroy() {
         super.onDestroy()
-        tts?.shutdown()
-        player?.release()
-        recorder?.release()
+        // Release any other resources here if necessary
+        // e.g., if InteractiveCanvasView held onto large bitmaps directly (though it shouldn't for long)
     }
 }

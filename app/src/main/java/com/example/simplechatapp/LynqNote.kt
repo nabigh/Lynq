@@ -7,11 +7,20 @@ import androidx.room.PrimaryKey
 data class LynqNote(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val contactId: String,       // Link note to specific chat/contact
-    val title: String,
-    val content: String?,        // Text content
-    val preview: String?,        // Small preview shown in list
-    val imagePath: String?,      // If an image is attached
-    val audioPath: String?,      // If audio note recorded
+    var title: String,
+
+    // This will hold the JSON string of all canvas objects
+    var canvasContentJson: String? = null,
+
+    // The 'preview' could be a generated thumbnail path or a short text summary
+    var preview: String? = null,
+
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    var updatedAt: Long = System.currentTimeMillis(),
+
+    // Optional: Keep for very simple text-only notes or legacy data.
+    // Consider migrating data from these to canvasContentJson if notes are edited.
+    val legacyTextContent: String? = null,
+    val legacyImagePath: String? = null,
+    val legacyAudioPath: String? = null
 )

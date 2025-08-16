@@ -1,20 +1,22 @@
+// settings.gradle.kts
+
 pluginManagement {
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven("https://jitpack.io")
     }
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS) // This is the key setting
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven { url = uri("https://jitpack.io") }
+        // Add any other repositories you need here
     }
 }
 
-rootProject.name = "SimpleChatApp"
-include(":app")
+rootProject.name = "SimpleChatApp" // Replace with your actual project name
+include(":app") // Or other modules you have

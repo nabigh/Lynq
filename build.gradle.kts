@@ -5,13 +5,3 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()    // <- make sure this is here
-        maven {
-            url = uri("https://jitpack.io")
-        }
-
-    }
-}

@@ -1,121 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/noteScroll"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    tools:context=".NoteEditorActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Note Title -->
+    <EditText
+        android:id="@+id/editNoteTitle"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:hint="Note Title"
+        android:inputType="textCapSentences"
+        android:maxLines="1"
+        android:imeOptions="actionDone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"/>
 
-        <EditText
-            android:id="@+id/editNoteTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Title"
-            android:textSize="20sp"
-            android:padding="8dp"
-            android:background="@android:color/transparent" />
-
-        <EditText
-            android:id="@+id/editNoteContent"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:hint="Write your note..."
-            android:gravity="top"
-            android:padding="8dp"
-            android:background="@android:color/transparent"
-            android:inputType="textMultiLine" />
-
-        <com.example.simplechatapp.DrawingView
-            android:id="@+id/drawingCanvas"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="16dp"
-            android:background="#FFF" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerEmbeddedContent"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginTop="16dp"
-            android:background="#EEE" />
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp"
-            android:weightSum="4">
-
-            <Button
-                android:id="@+id/btnDraw"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Save Draw" />
-
-            <Button
-                android:id="@+id/btnImage"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Gallery" />
-
-            <Button
-                android:id="@+id/btnCamera"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Camera" />
-
-            <Button
-                android:id="@+id/btnRecordAudio"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Record Audio" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:weightSum="3">
-
-            <Button
-                android:id="@+id/btnPlayAudio"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Play Audio" />
-
-            <Button
-                android:id="@+id/btnSpeechToText"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Speak" />
-
-            <Button
-                android:id="@+id/btnTextToSpeech"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Read" />
-        </LinearLayout>
+    <!-- Toolbar for Canvas Drawing Tools -->
+    <LinearLayout
+        android:id="@+id/toolsToolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical|start"
+        app:layout_constraintTop_toBottomOf="@id/editNoteTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
 
         <Button
-            android:id="@+id/btnSaveNote"
-            android:layout_width="match_parent"
+            android:id="@+id/btnSetColorBlack"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save Note"
-            android:layout_marginTop="16dp" />
+            android:minWidth="48dp"
+            android:text="BLK"
+            android:tooltipText="Black Pen"/>
+        <Button
+            android:id="@+id/btnSetColorRed"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:text="RED"
+            android:tooltipText="Red Pen"/>
+        <Button
+            android:id="@+id/btnSetColorBlue"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:text="BLU"
+            android:tooltipText="Blue Pen"/>
 
+        <View android:layout_width="1dp" android:layout_height="match_parent" android:background="?android:attr/listDivider" android:layout_marginStart="8dp" android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnSetStrokeSmall"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:text="S"
+            android:tooltipText="Small Stroke"/>
+        <Button
+            android:id="@+id/btnSetStrokeMedium"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:text="M"
+            android:tooltipText="Medium Stroke"/>
+        <Button
+            android:id="@+id/btnSetStrokeLarge"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:text="L"
+            android:tooltipText="Large Stroke"/>
+
+        <View android:layout_width="1dp" android:layout_height="match_parent" android:background="?android:attr/listDivider" android:layout_marginStart="8dp" android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnClearCanvas"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:text="Clear"
+            android:tooltipText="Clear Canvas"/>
     </LinearLayout>
-</ScrollView>
+
+    <!-- Additional Action Buttons (from the older part of your layout) -->
+    <!-- Wrapped in a HorizontalScrollView in case they overflow -->
+    <HorizontalScrollView
+        android:id="@+id/additionalActionsScrollView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/toolsToolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/additionalActionsContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+
+            <!-- Group 1: Media and Input -->
+            <Button
+                android:id="@+id/btnImage"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gallery"
+                android:tooltipText="Add image from Gallery"/>
+            <Button
+                android:id="@+id/btnCamera"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Camera"
+                android:tooltipText="Capture image with Camera"/>
+            <Button
+                android:id="@+id/btnRecordAudio"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Record"
+                android:tooltipText="Record Audio"/>
+
+            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="?android:attr/listDivider" android:layout_marginStart="8dp" android:layout_marginEnd="8dp"/>
+
+            <!-- Group 2: Audio Playback and Speech -->
+            <Button
+                android:id="@+id/btnPlayAudio"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Play"
+                android:tooltipText="Play Recorded Audio"/>
+            <Button
+                android:id="@+id/btnSpeechToText"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Speak"
+                android:tooltipText="Speech to Text"/>
+            <Button
+                android:id="@+id/btnTextToSpeech"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Read"
+                android:tooltipText="Text to Speech"/>
+
+            <!-- The original btnDraw is omitted as its function is now part of the interactiveCanvas itself -->
+            <!-- You might add specific tools for different drawing modes (pen, highlighter, shape) to toolsToolbar -->
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Interactive Canvas Area -->
+    <com.example.simplechatapp.InteractiveCanvasView
+        android:id="@+id/interactiveCanvas"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/additionalActionsScrollView"
+        app:layout_constraintBottom_toTopOf="@id/btnSaveNote"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="#F0F0F0"/>
+
+    <!-- Save Note Button -->
+    <Button
+        android:id="@+id/btnSaveNote"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save Note"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

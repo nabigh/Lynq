@@ -1,148 +1,74 @@
 package com.example.simplechatapp
 
-import android.content.Context
-import android.media.MediaPlayer
-import android.net.Uri
+import android.net.Uri // Added import for Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import java.util.concurrent.TimeUnit
 
-class ChatAdapter(private val messages: List<Message>) : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
+class ChatAdapter(private val messages: List<Message>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var mediaPlayer: MediaPlayer? = null
-
-    class ChatViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val userMessage: TextView = view.findViewById(R.id.userMessage)
-        val userMedia: ImageView = view.findViewById(R.id.userMedia)
-        val userDocument: TextView = view.findViewById(R.id.userDocument)
-        val userAudioLayout: View = view.findViewById(R.id.userAudioLayout)
-        val userAudioPlayButton: ImageView = view.findViewById(R.id.userAudioPlayButton)
-        val userAudioDuration: TextView = view.findViewById(R.id.userAudioDuration)
-
-        val botMessage: TextView = view.findViewById(R.id.botMessage)
-        val botMedia: ImageView = view.findViewById(R.id.botMedia)
-        val botDocument: TextView = view.findViewById(R.id.botDocument)
-        val botAudioLayout: View = view.findViewById(R.id.botAudioLayout)
-        val botAudioPlayButton: ImageView = view.findViewById(R.id.botAudioPlayButton)
-        val botAudioDuration: TextView = view.findViewById(R.id.botAudioDuration)
+    override fun getItemViewType(position: Int): Int {
+        return messages[position].messageType.ordinal
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.chat_item, parent, false)
-        return ChatViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        val type = MessageType.values()[viewType]
+        return when (type) {
+            MessageType.TEXT -> TextMessageViewHolder(inflater.inflate(R.layout.item_text_message, parent, false))
+            MessageType.IMAGE -> ImageMessageViewHolder(inflater.inflate(R.layout.item_image_message, parent, false))
+            MessageType.AUDIO -> AudioMessageViewHolder(inflater.inflate(R.layout.item_audio_message, parent, false))
+            MessageType.DOCUMENT -> DocumentMessageViewHolder(inflater.inflate(R.layout.item_document_message, parent, false))
+            MessageType.VIDEO -> VideoMessageViewHolder(inflater.inflate(R.layout.item_video_message, parent, false)) // Added VIDEO case
+            // Consider adding an else branch for future-proofing if new types are added frequently
+            // else -> throw IllegalArgumentException("Unsupported message type")
+        }
     }
 
-    override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messages[position]
-
-        // Hide all views first
-        holder.userMessage.visibility = View.GONE
-        holder.userMedia.visibility = View.GONE
-        holder.userDocument.visibility = View.GONE
-        holder.userAudioLayout.visibility = View.GONE
-
-        holder.botMessage.visibility = View.GONE
-        holder.botMedia.visibility = View.GONE
-        holder.botDocument.visibility = View.GONE
-        holder.botAudioLayout.visibility = View.GONE
-
-        if (message.isSentByUser) {
-            when (message.messageType) {
-                MessageType.TEXT -> {
-                    holder.userMessage.text = message.content
-                    holder.userMessage.visibility = View.VISIBLE
-                }
-                MessageType.IMAGE, MessageType.VIDEO -> {
-                    message.mediaUri?.let { uriString ->
-                        holder.userMedia.visibility = View.VISIBLE
-                        Glide.with(holder.userMedia.context)
-                            .load(Uri.parse(uriString))
-                            .into(holder.userMedia)
-                    }
-                }
-                MessageType.DOCUMENT -> {
-                    holder.userDocument.text = message.content ?: "Document"
-                    holder.userDocument.visibility = View.VISIBLE
-                }
-                MessageType.AUDIO -> {
-                    holder.userAudioLayout.visibility = View.VISIBLE
-                    holder.userAudioDuration.text = getDurationString(message.audioDurationMs)
-
-                    holder.userAudioPlayButton.setImageResource(android.R.drawable.ic_media_play)
-                    holder.userAudioPlayButton.setOnClickListener {
-                        message.mediaUri?.let { uriString ->
-                            playAudio(Uri.parse(uriString), holder.userAudioPlayButton.context, holder.userAudioPlayButton)
-                        }
-                    }
-                }
-            }
-        } else {
-            when (message.messageType) {
-                MessageType.TEXT -> {
-                    holder.botMessage.text = message.content
-                    holder.botMessage.visibility = View.VISIBLE
-                }
-                MessageType.IMAGE, MessageType.VIDEO -> {
-                    message.mediaUri?.let { uriString ->
-                        holder.botMedia.visibility = View.VISIBLE
-                        Glide.with(holder.botMedia.context)
-                            .load(Uri.parse(uriString))
-                            .into(holder.botMedia)
-                    }
-                }
-                MessageType.DOCUMENT -> {
-                    holder.botDocument.text = message.content ?: "Document"
-                    holder.botDocument.visibility = View.VISIBLE
-                }
-                MessageType.AUDIO -> {
-                    holder.botAudioLayout.visibility = View.VISIBLE
-                    holder.botAudioDuration.text = getDurationString(message.audioDurationMs)
-
-                    holder.botAudioPlayButton.setImageResource(android.R.drawable.ic_media_play)
-                    holder.botAudioPlayButton.setOnClickListener {
-                        message.mediaUri?.let { uriString ->
-                            playAudio(Uri.parse(uriString), holder.botAudioPlayButton.context, holder.botAudioPlayButton)
-                        }
-                    }
-                }
-            }
+        when (holder) {
+            is TextMessageViewHolder -> holder.bind(message)
+            is ImageMessageViewHolder -> holder.bind(message)
+            is AudioMessageViewHolder -> holder.bind(message)
+            is DocumentMessageViewHolder -> holder.bind(message)
+            is VideoMessageViewHolder -> holder.bind(message) // Added VIDEO case
         }
     }
 
     override fun getItemCount(): Int = messages.size
 
-    private fun playAudio(uri: Uri, context: Context, playButton: ImageView) {
-        if (mediaPlayer?.isPlaying == true) {
-            mediaPlayer?.stop()
-            mediaPlayer?.release()
-            mediaPlayer = null
-            playButton.setImageResource(android.R.drawable.ic_media_play)
-            return
-        }
+    // --- ViewHolder classes ---
+    class TextMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val textView: TextView = view.findViewById(R.id.messageTextView)
+        fun bind(message: Message) { textView.text = message.content }
+    }
 
-        mediaPlayer?.release()
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(context, uri)
-            prepare()
-            start()
-            playButton.setImageResource(android.R.drawable.ic_media_pause)
-            setOnCompletionListener {
-                playButton.setImageResource(android.R.drawable.ic_media_play)
-                release()
-                mediaPlayer = null
-            }
+    class ImageMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val imageView: ImageView = view.findViewById(R.id.messageImageView)
+        fun bind(message: Message) {
+            // Make sure message.mediaUri is not null and is a valid URI
+            message.mediaUri?.let { imageView.setImageURI(Uri.parse(it)) }
         }
     }
 
-    private fun getDurationString(durationMs: Long?): String {
-        if (durationMs == null || durationMs <= 0) return "00:00"
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(durationMs)
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(durationMs) - TimeUnit.MINUTES.toSeconds(minutes)
-        return String.format("%02d:%02d", minutes, seconds)
+    class AudioMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val audioLabel: TextView = view.findViewById(R.id.audioLabel)
+        fun bind(message: Message) { audioLabel.text = "Audio: ${message.mediaUri}" }
+    }
+
+    class DocumentMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val docLabel: TextView = view.findViewById(R.id.documentLabel)
+        fun bind(message: Message) { docLabel.text = "Document: ${message.mediaUri}" }
+    }
+
+    // You'll need to create a ViewHolder for Video messages
+    class VideoMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        // Example: a TextView to show the video URI, or a VideoView
+        private val videoLabel: TextView = view.findViewById(R.id.videoLabel) // Assuming you have a videoLabel in your layout
+        fun bind(message: Message) { videoLabel.text = "Video: ${message.mediaUri}" }
     }
 }

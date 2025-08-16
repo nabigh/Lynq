@@ -1,4 +1,5 @@
-package com.example.simplechatapp.data
+package com.example.simplechatapp
+
 
 import android.content.Context
 import androidx.room.Database

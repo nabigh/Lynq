@@ -1,51 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="8dp">
+    tools:context=".MainActivity">
 
+    <!-- Chat messages -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRecyclerView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:overScrollMode="never"/>
+        android:overScrollMode="never"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/inputAreaContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingBottom="8dp"
+        android:clipToPadding="false"/>
 
+    <!-- Input container -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/inputAreaContainer"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:gravity="bottom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <EditText
-            android:id="@+id/messageEditText"
-            android:layout_width="26dp"
+        <!-- Card for EditText + side icons -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Type a message" />
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/input_field_background">
 
-        <Button
-            android:id="@+id/attachButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Attach" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp">
 
-        <Button
-            android:id="@+id/camButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Camera"/>
+                <ImageButton
+                    android:id="@+id/emojiButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/emoji_28"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Emoji"
+                    android:padding="8dp"/>
 
-        <Button
-            android:id="@+id/sendButton"
+                <EditText
+                    android:id="@+id/messageEditText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Message"
+                    android:inputType="textCapSentences|textMultiLine"
+                    android:maxLines="5"
+                    android:minLines="1"
+                    android:background="@android:color/transparent"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"/>
+
+                <ImageButton
+                    android:id="@+id/attachButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/attach_32"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Attach"
+                    android:padding="8dp"/>
+
+                <ImageButton
+                    android:id="@+id/cameraButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_camera_alt"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Camera"
+                    android:padding="8dp"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Floating action button for send / record -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/sendOrRecordButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Send"/>
-        <Button
-            android:id="@+id/recButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Record"/>
+            android:layout_marginStart="8dp"
+            app:fabSize="normal"
+            app:srcCompat="@drawable/mic"
+            app:tint="@android:color/white"
+            app:backgroundTint="?attr/colorPrimary"/>
+        <!-- Emoji Picker View -->
+        <androidx.emoji2.emojipicker.EmojiPickerView
+            android:id="@+id/emojiPickerView"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:visibility="gone"
+            app:emojiGridColumns="8" />
+
     </LinearLayout>
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
